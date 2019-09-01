@@ -3,92 +3,92 @@ package blackjack
 import (
 	"fmt"
 
-	"../card"
-	"../deck"
+	"./card"
+	"./deck"
 )
 
 type Game struct {
-	Deck          deck.Deck
-	Stage         int
-	Players       []Hand
-	Dealer        Hand
-	CurrentPlayer int
+	deck          deck.Deck
+	stage         int
+	players       []hand
+	dealer        hand
+	currentPlayer int
 }
 
 const (
-	PlayerTurn int = iota
-	DealerTurn
-	HandOver
+	playerTurn int = iota
+	dealerTurn
+	handOver
 )
 
-func (game Game) PlayerCount() int {
-	return len(game.Players)
+func StartGame(numberOfPlayers, decks int) Game {
+	game := Game{}
+	game.deck = deck.NewDeck()
+	game.deck.AddDecks(decks - 1)
+	game.deck.Shuffle()
+	for i := 0; i < numberOfPlayers; i++ {
+		game.players = append(game.players, nil)
+	}
+	game.dealer = nil
+	return game
 }
 
 func (game *Game) Deal() {
-	d := game.Deck
+	d := game.deck
 	var c card.Card
 	for i := 0; i < 2; i++ {
-		for j := range game.Players {
-			c, d = Draw(d)
-			game.Players[j] = append(game.Players[j], c)
+		for j := range game.players {
+			c, d = draw(d)
+			game.players[j] = append(game.players[j], c)
 		}
-		c, d = Draw(d)
-		game.Dealer = append(game.Dealer, c)
+		c, d = draw(d)
+		game.dealer = append(game.dealer, c)
 	}
-	game.Stage = PlayerTurn
-	game.CurrentPlayer = 0
-	game.Deck = d
-}
-
-func (game *Game) Hit() {
-	if game.Stage == DealerTurn {
-		card, deck := Draw(game.Deck)
-		game.Dealer = append(game.Dealer, card)
-		game.Deck = deck
-		return
-	}
-	p := game.CurrentPlayer
-	card, deck := Draw(game.Deck)
-	game.Players[p] = append(game.Players[p], card)
-	game.Deck = deck
-}
-
-func (game *Game) Stand() {
-	if game.CurrentPlayer < game.PlayerCount()-1 {
-		game.CurrentPlayer++
-	} else {
-		game.Stage = DealerTurn
-	}
-}
-
-func Draw(deck deck.Deck) (card.Card, deck.Deck) {
-	card := deck.Draw(1)
-	return card[0], deck
-}
-
-func StartGame(numberOfPlayers, Decks int) Game {
-	game := Game{}
-	game.Deck = deck.NewDeck()
-	game.Deck.AddDecks(Decks - 1)
-	game.Deck.Shuffle()
-	for i := 0; i < numberOfPlayers; i++ {
-		game.Players = append(game.Players, nil)
-	}
-	game.Dealer = nil
-	return game
+	game.stage = playerTurn
+	game.currentPlayer = 0
+	game.deck = d
 }
 
 func (game *Game) EndGame() {
 	fmt.Println("==FINAL HANDS==")
-	dScore := game.Dealer.Score()
-	for i, player := range game.Players {
-		fmt.Printf("%-8s: %2d %s\n", fmt.Sprintf("Player %d", i+1), player.Score(), results(player.Score(), dScore))
-		game.Players[i] = nil
+	dScore := game.dealer.score()
+	for i, player := range game.players {
+		fmt.Printf("%-8s: %2d %s\n", fmt.Sprintf("Player %d", i+1), player.score(), results(player.score(), dScore))
+		game.players[i] = nil
 	}
 	fmt.Printf("%-8s: %d\n", "Dealer", dScore)
 	fmt.Println("=======================================")
-	game.Dealer = nil
+	game.dealer = nil
+}
+
+func (game Game) playerCount() int {
+	return len(game.players)
+}
+
+func (game *Game) hit() {
+	if game.stage == dealerTurn {
+		card, deck := draw(game.deck)
+		game.dealer = append(game.dealer, card)
+		game.deck = deck
+		return
+	}
+	p := game.currentPlayer
+	card, deck := draw(game.deck)
+	game.players[p] = append(game.players[p], card)
+	game.deck = deck
+}
+
+func (game *Game) stand() {
+	if game.currentPlayer < game.playerCount()-1 {
+		game.currentPlayer++
+	} else {
+		game.stage = dealerTurn
+	}
+}
+
+func draw(deck deck.Deck) (card.Card, deck.Deck) {
+	card := deck.Draw(1)
+	return card[0], deck
 }
 
 func results(player, dealer int) string {

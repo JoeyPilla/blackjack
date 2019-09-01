@@ -4,13 +4,21 @@ import (
 	"fmt"
 	"strings"
 
-	"../card"
+	"./card"
 )
 
-type Hand []card.Card
+type hand []card.Card
 
-func (h Hand) Score() int {
-	ret := h.MinScore()
+func (h hand) String() string {
+	cards := make([]string, len(h))
+	for i := range h {
+		cards[i] = fmt.Sprintf("%15s", h[i].String())
+	}
+	return strings.Join(cards, ", ")
+}
+
+func (h hand) score() int {
+	ret := h.minScore()
 	for _, c := range h {
 		if c.Rank == card.Ace {
 			if ret <= 11 {
@@ -21,7 +29,7 @@ func (h Hand) Score() int {
 	return ret
 }
 
-func (h Hand) MinScore() int {
+func (h hand) minScore() int {
 	ret := 0
 	for _, c := range h {
 		ret += min(int(c.Rank), 10)
@@ -34,12 +42,4 @@ func min(a, b int) int {
 		return a
 	}
 	return b
-}
-
-func (h Hand) String() string {
-	cards := make([]string, len(h))
-	for i := range h {
-		cards[i] = fmt.Sprintf("%15s", h[i].String())
-	}
-	return strings.Join(cards, ", ")
 }
