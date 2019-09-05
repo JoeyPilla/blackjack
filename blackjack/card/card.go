@@ -20,6 +20,13 @@ func (c Card) String() string {
 	return fmt.Sprintf("%s of %ss", c.Rank.String(), c.Suit.String())
 }
 
+func (c Card) BlackjackValue() int {
+	if int(c.Rank) < 10 {
+		return int(c.Rank)
+	}
+	return 10
+}
+
 func NewDeck() []Card {
 	var cards []Card
 	for _, suit := range suits {
