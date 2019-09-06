@@ -27,7 +27,7 @@ func (d dealerPlayer) GetBet() int {
 	return 1
 }
 
-func (d dealerPlayer) SetBet() {
+func (d dealerPlayer) SetBet(count int) {
 	// here to satisfy Player interface
 }
 

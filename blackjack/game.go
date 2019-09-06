@@ -2,7 +2,6 @@ package blackjack
 
 import (
 	"errors"
-	"fmt"
 
 	"./card"
 	"./deck"
@@ -15,6 +14,7 @@ type Game struct {
 	playerCount   int
 
 	deck          deck.Deck
+	count         int
 	stage         int
 	currentPlayer int
 
@@ -63,6 +63,7 @@ func (game *Game) Play() []int {
 	min := 52 * game.numberOfDecks / 3
 	for i := 0; i < game.numberOfHands; i++ {
 		if len(game.deck.Deck) < min {
+			game.count = 0
 			game.deck = deck.NewDeck()
 			game.deck.AddDecks(game.numberOfDecks - 1)
 			game.deck.Shuffle()
@@ -81,8 +82,14 @@ func (game *Game) Play() []int {
 }
 
 func (game *Game) Bet() {
+	var count int
+	if len(game.deck.Deck)/52 == 0 {
+		count = 0
+	} else {
+		count = game.count / (len(game.deck.Deck) / 52)
+	}
 	for _, player := range game.players {
-		player.SetBet()
+		player.SetBet(count)
 	}
 }
 
@@ -103,16 +110,34 @@ func (game *Game) Deal() {
 }
 
 func (game *Game) EndGame() {
+	cards := []card.Card{}
 	dealerHand := game.dealer.GetHand()
 	dScore := dealerHand[0].score()
 	for i, player := range game.players {
 		for _, h := range player.GetHand() {
 			game.getResults(i, h.score(), dScore)
+			for _, c := range h {
+				cards = append(cards, c)
+			}
+		}
+		for _, c := range dealerHand[0] {
+			cards = append(cards, c)
 		}
 		game.players[i].Results(dealerHand)
+		game.setCount(cards)
 		game.players[i].NewHand()
 	}
 	game.dealer.NewHand()
+}
+
+func (game *Game) setCount(cards []card.Card) {
+	for _, c := range cards {
+		if c.BlackjackValue() >= 10 || c.BlackjackValue() == 1 {
+			game.count--
+		} else if c.BlackjackValue() <= 6 {
+			game.count++
+		}
+	}
 }
 
 var (
@@ -127,14 +152,11 @@ func MoveHit(game *Game, h int) error {
 	score := 0
 	card, game.deck = draw(game.deck)
 	if game.stage == dealerTurn {
-		fmt.Println("dealer turn")
 		game.dealer.AddToHand(card, 0)
 		score = game.dealer.GetHand()[0].score()
 	} else {
-		fmt.Println("player Turn")
 		game.players[game.currentPlayer].AddToHand(card, h)
 		score = game.players[game.currentPlayer].GetHand()[h].score()
-		fmt.Println(score)
 	}
 	if score > 21 {
 		return errBust
@@ -166,9 +188,6 @@ func MoveSplit(game *Game, h int) error {
 	playerHand := player.GetHand()
 	if playerHand[0][0].BlackjackValue() != playerHand[0][1].BlackjackValue() {
 		return errors.New("Cannot split different cards")
-	}
-	if len(playerHand) > 1 {
-		return errors.New("Can't split already split hand")
 	}
 	if len(playerHand[0]) > 2 {
 		return errors.New("Can only split two cards")

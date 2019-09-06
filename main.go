@@ -12,16 +12,16 @@ func print(results []int, hands int) {
 		fmt.Printf("Player %d winnings $%d.\n", i+1, result)
 		totalWinnings += result
 	}
-	fmt.Println(totalWinnings / len(results))
+	fmt.Println(float64(totalWinnings) / float64(len(results)) / float64(hands))
 }
 
 func main() {
 
 	options := blackjack.Options{
-		NumberOfHands:   1,
-		NumberOfAI:      0,
-		NumberOfHumans:  2,
-		NumberOfDecks:   3,
+		NumberOfHands:   99999999,
+		NumberOfAI:      5,
+		NumberOfHumans:  0,
+		NumberOfDecks:   6,
 		BlackjackPayout: 1.5,
 	}
 

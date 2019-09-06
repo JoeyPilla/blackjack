@@ -12,10 +12,10 @@ type humanPlayer struct {
 	hand    []hand
 }
 
-func (ai *humanPlayer) SetBet() {
+func (ai *humanPlayer) SetBet(count int) {
 	bet := 10
-	// fmt.Println("What would you like to bet?")
-	// fmt.Scanf("%d", &bet)
+	fmt.Println("What would you like to bet?")
+	fmt.Scanf("%d", &bet)
 	ai.bet = bet
 }
 

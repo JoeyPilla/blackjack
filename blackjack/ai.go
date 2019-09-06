@@ -5,7 +5,7 @@ import (
 )
 
 type Player interface {
-	SetBet()
+	SetBet(int)
 	GetBet() int
 	DoubleDown()
 	SetBalance(int)
@@ -24,8 +24,14 @@ type aiPlayer struct {
 	hand    []hand
 }
 
-func (ai *aiPlayer) SetBet() {
+func (ai *aiPlayer) SetBet(count int) {
 	bet := 10
+	if count >= 10 {
+		bet = 50
+	}
+	if count >= 5 {
+		bet = 20
+	}
 	ai.bet = bet
 }
 
@@ -78,9 +84,25 @@ func createAIPlayer() *aiPlayer {
 }
 
 func (ai aiPlayer) Play(hand hand, dealer card.Card) Move {
-	if hand.score() < 17 {
-		return MoveHit
+	if len(hand) == 2 {
+		if hand[0] == hand[1] {
+			score := hand[0].BlackjackValue()
+			if score >= 8 && score != 10 {
+				return MoveSplit
+			}
+		}
+		if (hand.score() == 10 || hand.score() == 11) && hand.score() == hand.minScore() {
+			return MoveDouble
+		}
+		dealerScore := dealer.BlackjackValue()
+		if dealerScore >= 5 || dealerScore <= 6 {
+			return MoveStand
+		}
+		if hand.score() < 13 {
+			return MoveHit
+		}
 	}
+
 	return MoveStand
 }
 
