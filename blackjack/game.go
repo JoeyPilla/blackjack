@@ -2,6 +2,7 @@ package blackjack
 
 import (
 	"errors"
+	"fmt"
 
 	"./card"
 	"./deck"
@@ -11,6 +12,7 @@ import (
 type Game struct {
 	numberOfHands int
 	numberOfDecks int
+	playerCount   int
 
 	deck          deck.Deck
 	stage         int
@@ -65,6 +67,7 @@ func (game *Game) Play() []int {
 			game.deck.AddDecks(game.numberOfDecks - 1)
 			game.deck.Shuffle()
 		}
+		game.playerCount = len(game.players)
 		game.Deal()
 		game.Bet()
 		game.PlayHand()
@@ -112,27 +115,26 @@ func (game *Game) EndGame() {
 	game.dealer.NewHand()
 }
 
-func (game Game) playerCount() int {
-	return len(game.players)
-}
-
 var (
 	errBust  = errors.New("Hand score exceeded 21")
 	errStand = errors.New("Player Stood")
 )
 
-type Move func(*Game) error
+type Move func(*Game, int) error
 
-func MoveHit(game *Game) error {
+func MoveHit(game *Game, h int) error {
 	var card card.Card
 	score := 0
 	card, game.deck = draw(game.deck)
 	if game.stage == dealerTurn {
+		fmt.Println("dealer turn")
 		game.dealer.AddToHand(card, 0)
 		score = game.dealer.GetHand()[0].score()
 	} else {
-		game.players[game.currentPlayer].AddToHand(card, 0)
-		score = game.players[game.currentPlayer].GetHand()[0].score()
+		fmt.Println("player Turn")
+		game.players[game.currentPlayer].AddToHand(card, h)
+		score = game.players[game.currentPlayer].GetHand()[h].score()
+		fmt.Println(score)
 	}
 	if score > 21 {
 		return errBust
@@ -140,8 +142,8 @@ func MoveHit(game *Game) error {
 	return nil
 }
 
-func MoveStand(game *Game) error {
-	if game.currentPlayer == game.playerCount()-1 {
+func MoveStand(game *Game, h int) error {
+	if game.currentPlayer == game.playerCount-1 && h == len(game.players[game.currentPlayer].GetHand())-1 {
 		game.stage = dealerTurn
 	} else if game.stage == dealerTurn {
 		game.stage = handOver
@@ -149,17 +151,17 @@ func MoveStand(game *Game) error {
 	return errStand
 }
 
-func MoveDouble(game *Game) error {
+func MoveDouble(game *Game, h int) error {
 	player := game.players[game.currentPlayer]
 	if len(player.GetHand()[0]) > 2 {
 		return errors.New("can only double on a hand with 2 cards")
 	}
 	player.DoubleDown()
-	MoveHit(game)
-	return MoveStand(game)
+	MoveHit(game, 0)
+	return MoveStand(game, 0)
 }
 
-func MoveSplit(game *Game) error {
+func MoveSplit(game *Game, h int) error {
 	player := game.players[game.currentPlayer]
 	playerHand := player.GetHand()
 	if playerHand[0][0].BlackjackValue() != playerHand[0][1].BlackjackValue() {
@@ -178,8 +180,15 @@ func MoveSplit(game *Game) error {
 	player.AddToHand(c, 0)
 	c, d = draw(d)
 	player.AddToHand(c, 1)
-	err := player.Play(player.GetHand()[0], game.dealer.GetHand()[0][1])(game)
-	err = player.Play(player.GetHand()[1], game.dealer.GetHand()[0][1])(game)
+	var err error = nil
+	for err == nil {
+		err = player.Play(player.GetHand()[0], game.dealer.GetHand()[0][1])(game, 0)
+	}
+	var err2 error = nil
+	for err2 == nil {
+		err2 = player.Play(player.GetHand()[1], game.dealer.GetHand()[0][1])(game, 1)
+	}
+
 	return err
 }
 

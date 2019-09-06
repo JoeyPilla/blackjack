@@ -18,9 +18,9 @@ func print(results []int, hands int) {
 func main() {
 
 	options := blackjack.Options{
-		NumberOfHands:   100,
+		NumberOfHands:   1,
 		NumberOfAI:      0,
-		NumberOfHumans:  1,
+		NumberOfHumans:  2,
 		NumberOfDecks:   3,
 		BlackjackPayout: 1.5,
 	}

@@ -13,7 +13,7 @@ type humanPlayer struct {
 }
 
 func (ai *humanPlayer) SetBet() {
-	bet := 0
+	bet := 10
 	// fmt.Println("What would you like to bet?")
 	// fmt.Scanf("%d", &bet)
 	ai.bet = bet

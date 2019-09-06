@@ -6,13 +6,13 @@ func (game *Game) PlayHand() {
 			for game.currentPlayer == i && game.stage == playerTurn {
 				playerHand := game.players[i].GetHand()
 				dealerHand := game.dealer.GetHand()[0]
-				for i := range playerHand {
+				for j := range playerHand {
 					stand := false
 					for !stand {
-						err := game.players[i].Play(playerHand[i], dealerHand[1])(game)
+						err := game.players[i].Play(playerHand[j], dealerHand[1])(game, j)
 						switch err {
 						case errBust:
-							MoveStand(game)
+							MoveStand(game, 0)
 							stand = true
 						case errStand:
 							stand = true
@@ -27,8 +27,8 @@ func (game *Game) PlayHand() {
 			}
 		}
 	}
-	for game.stage != handOver {
+	for game.stage == dealerTurn {
 		dealerHand := game.dealer.GetHand()[0]
-		game.dealer.Play(dealerHand, dealerHand[1])(game)
+		game.dealer.Play(dealerHand, dealerHand[1])(game, 0)
 	}
 }
